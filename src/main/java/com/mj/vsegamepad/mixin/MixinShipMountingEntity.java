@@ -11,11 +11,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.valkyrienskies.mod.common.entity.ShipMountingEntity;
 import org.valkyrienskies.mod.common.networking.PacketPlayerDriving;
 
+import static org.valkyrienskies.core.impl.networking.simple.SimplePackets.sendToServer;
+import static org.valkyrienskies.mod.common.ValkyrienSkiesMod.vsCore;
+
+
 @Mixin(ShipMountingEntity.class)
 public abstract class MixinShipMountingEntity {
 
 
-    @Inject(method = "sendDrivingPacket", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "sendDrivingPacket", at = @At("HEAD"), cancellable = true, remap = false)
     private void sendDrivingPacket(CallbackInfo ci) {
         // Trick to get values from the class we mixining
         ShipMountingEntity self = ((ShipMountingEntity) (Object) this);
@@ -38,7 +42,13 @@ public abstract class MixinShipMountingEntity {
         impulse.x = (left == right) ? 0.0f : (left ? 1.0f : -1.0f);
         impulse.y = (up == down) ? 0.0f : (up ? 1.0f : -1.0f);
 
-        // TODO: Fix me, we are too deprecated to compile :sob:
-        new PacketPlayerDriving(impulse, sprint, cruise).sendToServer();
+        // For the next VS update (beta.6):
+        //vsCore.getSimplePacketNetworking().sendToServer(new PacketPlayerDriving(impulse, sprint, cruise));
+
+        // For VS beta.5
+        sendToServer(new PacketPlayerDriving(impulse, sprint, cruise));
+
+        //
+        ci.cancel();
     }
 }
